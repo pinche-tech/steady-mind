@@ -1,0 +1,310 @@
+{
+  "entities": {
+    "MicroTask": {
+      "title": "MicroTask",
+      "description": "A task broken down into low-friction 2-minute micro-steps with avoidance blocker analysis and dread rating.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of the authenticated owner matching request.auth.uid."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the task (1 to 200 characters)."
+        },
+        "blockerType": {
+          "type": "string",
+          "enum": [
+            "overwhelmed",
+            "perfectionism",
+            "ambiguous",
+            "low_energy",
+            "fear_of_outcome"
+          ],
+          "description": "Root emotional/cognitive reason for procrastinating on this task."
+        },
+        "dreadLevel": {
+          "type": "integer",
+          "description": "Perceived dread/anxiety level before starting (1 to 10)."
+        },
+        "microSteps": {
+          "type": "array",
+          "description": "List of up to 20 tiny actionable micro-steps (strings up to 200 chars)."
+        },
+        "completedStepsCount": {
+          "type": "integer",
+          "description": "Count of completed micro-steps (0 to 20)."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "completed"
+          ],
+          "description": "Lifecycle status of the task; locked once completed."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (clients must submit FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp (clients must submit FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "blockerType",
+        "dreadLevel",
+        "microSteps",
+        "completedStepsCount",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "ThoughtLog": {
+      "title": "ThoughtLog",
+      "description": "A CBT cognitive reframing entry capturing an anxious thought, cognitive distortion, compassionate reframe, tiny action, and pre/post anxiety ratings.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of the authenticated owner matching request.auth.uid."
+        },
+        "anxiousThought": {
+          "type": "string",
+          "description": "The raw anxious or catastrophic thought (1 to 500 characters)."
+        },
+        "distortion": {
+          "type": "string",
+          "description": "Identified cognitive distortion label (1 to 60 characters)."
+        },
+        "reframeText": {
+          "type": "string",
+          "description": "Grounded, evidence-based compassionate reframe (1 to 500 characters)."
+        },
+        "tinyAction": {
+          "type": "string",
+          "description": "One tiny 2-minute controllable step (1 to 200 characters)."
+        },
+        "anxietyBefore": {
+          "type": "integer",
+          "description": "Anxiety intensity before reframing (0 to 100)."
+        },
+        "anxietyAfter": {
+          "type": "integer",
+          "description": "Anxiety intensity after reframing (0 to 100)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (clients must submit FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp (clients must submit FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "anxiousThought",
+        "distortion",
+        "reframeText",
+        "tinyAction",
+        "anxietyBefore",
+        "anxietyAfter",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "FocusSession": {
+      "title": "FocusSession",
+      "description": "An immutable completed anti-procrastination focus timer session.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of the authenticated owner matching request.auth.uid."
+        },
+        "modeName": {
+          "type": "string",
+          "description": "Focus timer mode name (1 to 80 characters)."
+        },
+        "durationMinutes": {
+          "type": "integer",
+          "description": "Duration focused in minutes (1 to 180)."
+        },
+        "taskTitle": {
+          "type": "string",
+          "description": "Title of the task worked on (1 to 200 characters)."
+        },
+        "reliefRating": {
+          "type": "integer",
+          "description": "Post-session relief/momentum rating (1 to 10)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Session completion server timestamp (clients must submit FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "modeName",
+        "durationMinutes",
+        "taskTitle",
+        "reliefRating",
+        "createdAt"
+      ]
+    },
+    "WorryVaultItem": {
+      "title": "WorryVaultItem",
+      "description": "An intrusive worry postponed to a scheduled Worry Window.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of the authenticated owner matching request.auth.uid."
+        },
+        "worryText": {
+          "type": "string",
+          "description": "Text of the postponed worry (1 to 500 characters)."
+        },
+        "scheduledWindow": {
+          "type": "string",
+          "description": "Scheduled worry window label (1 to 120 characters)."
+        },
+        "isResolved": {
+          "type": "boolean",
+          "description": "Whether the worry has been resolved or faded."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp."
+        }
+      },
+      "required": [
+        "userId",
+        "worryText",
+        "scheduledWindow",
+        "isResolved",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "MpesaSubscription": {
+      "title": "MpesaSubscription",
+      "description": "A verified M-Pesa subscription record sent to recipient 0119137126.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "UID of the authenticated subscriber matching request.auth.uid."
+        },
+        "planId": {
+          "type": "string",
+          "enum": [
+            "weekly",
+            "monthly",
+            "annual"
+          ],
+          "description": "Subscription plan identifier."
+        },
+        "planTitle": {
+          "type": "string",
+          "description": "Display name of the subscribed tier (1 to 100 characters)."
+        },
+        "amountKes": {
+          "type": "integer",
+          "description": "Subscription price paid in Kenyan Shillings (KES)."
+        },
+        "recipientMpesaNumber": {
+          "type": "string",
+          "description": "Recipient M-Pesa phone number (0119137126)."
+        },
+        "senderPhone": {
+          "type": "string",
+          "description": "Subscriber's M-Pesa phone number (1 to 24 characters)."
+        },
+        "mpesaReceiptCode": {
+          "type": "string",
+          "description": "Alphanumeric M-Pesa confirmation code (8 to 12 characters)."
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "cancelled"
+          ],
+          "description": "Current status of the subscription."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp."
+        }
+      },
+      "required": [
+        "userId",
+        "planId",
+        "planTitle",
+        "amountKes",
+        "recipientMpesaNumber",
+        "senderPhone",
+        "mpesaReceiptCode",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": {
+        "$ref": "#/entities/MicroTask"
+      },
+      "description": "Per-user collection of micro-step tasks."
+    },
+    "/users/{userId}/thought_logs/{logId}": {
+      "schema": {
+        "$ref": "#/entities/ThoughtLog"
+      },
+      "description": "Per-user collection of CBT cognitive reframing logs."
+    },
+    "/users/{userId}/focus_sessions/{sessionId}": {
+      "schema": {
+        "$ref": "#/entities/FocusSession"
+      },
+      "description": "Per-user append-only collection of completed focus timer sessions."
+    },
+    "/users/{userId}/worry_vault/{worryId}": {
+      "schema": {
+        "$ref": "#/entities/WorryVaultItem"
+      },
+      "description": "Per-user collection of postponed worries."
+    },
+    "/users/{userId}/subscriptions/{subscriptionId}": {
+      "schema": {
+        "$ref": "#/entities/MpesaSubscription"
+      },
+      "description": "Per-user collection of M-Pesa subscription receipts."
+    }
+  }
+}

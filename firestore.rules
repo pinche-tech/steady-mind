@@ -1,0 +1,280 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Default-Deny Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Global Primitives
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Validation Blueprint: MicroTask
+    function isValidTask(data, userId) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.userId == request.auth.uid && data.userId == userId &&
+             data.title is string && data.title.size() >= 1 && data.title.size() <= 200 &&
+             data.blockerType is string && data.blockerType.size() >= 1 && data.blockerType.size() <= 40 &&
+             (data.blockerType == 'overwhelmed' ||
+              data.blockerType == 'perfectionism' ||
+              data.blockerType == 'ambiguous' ||
+              data.blockerType == 'low_energy' ||
+              data.blockerType == 'fear_of_outcome') &&
+             data.dreadLevel is int && data.dreadLevel >= 1 && data.dreadLevel <= 10 &&
+             data.microSteps is list && data.microSteps.size() <= 20 &&
+             (data.microSteps.size() == 0 || (data.microSteps[0] is string && data.microSteps[0].size() <= 200)) &&
+             data.completedStepsCount is int && data.completedStepsCount >= 0 && data.completedStepsCount <= 20 &&
+             data.status is string && data.status.size() >= 1 && data.status.size() <= 20 &&
+             (data.status == 'active' || data.status == 'completed') &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // Validation Blueprint: ThoughtLog
+    function isValidThoughtLog(data, userId) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.userId == request.auth.uid && data.userId == userId &&
+             data.anxiousThought is string && data.anxiousThought.size() >= 1 && data.anxiousThought.size() <= 500 &&
+             data.distortion is string && data.distortion.size() >= 1 && data.distortion.size() <= 60 &&
+             data.reframeText is string && data.reframeText.size() >= 1 && data.reframeText.size() <= 500 &&
+             data.tinyAction is string && data.tinyAction.size() >= 1 && data.tinyAction.size() <= 200 &&
+             data.anxietyBefore is int && data.anxietyBefore >= 0 && data.anxietyBefore <= 100 &&
+             data.anxietyAfter is int && data.anxietyAfter >= 0 && data.anxietyAfter <= 100 &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // Validation Blueprint: FocusSession
+    function isValidFocusSession(data, userId) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.userId == request.auth.uid && data.userId == userId &&
+             data.modeName is string && data.modeName.size() >= 1 && data.modeName.size() <= 80 &&
+             data.durationMinutes is int && data.durationMinutes >= 1 && data.durationMinutes <= 180 &&
+             data.taskTitle is string && data.taskTitle.size() >= 1 && data.taskTitle.size() <= 200 &&
+             data.reliefRating is int && data.reliefRating >= 1 && data.reliefRating <= 10 &&
+             data.createdAt is timestamp && data.createdAt <= request.time;
+    }
+
+    // Validation Blueprint: WorryVaultItem
+    function isValidWorryVaultItem(data, userId) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.userId == request.auth.uid && data.userId == userId &&
+             data.worryText is string && data.worryText.size() >= 1 && data.worryText.size() <= 500 &&
+             data.scheduledWindow is string && data.scheduledWindow.size() >= 1 && data.scheduledWindow.size() <= 120 &&
+             data.isResolved is bool &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    // Validation Blueprint: MpesaSubscription
+    function isValidMpesaSubscription(data, userId) {
+      return data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.userId == request.auth.uid && data.userId == userId &&
+             data.planId is string && (data.planId == 'weekly' || data.planId == 'monthly' || data.planId == 'annual') &&
+             data.planTitle is string && data.planTitle.size() >= 1 && data.planTitle.size() <= 100 &&
+             data.amountKes is int && data.amountKes >= 50 && data.amountKes <= 50000 &&
+             data.recipientMpesaNumber == '0119137126' &&
+             data.senderPhone is string && data.senderPhone.size() >= 7 && data.senderPhone.size() <= 24 &&
+             data.mpesaReceiptCode is string && data.mpesaReceiptCode.size() >= 8 && data.mpesaReceiptCode.size() <= 12 &&
+             data.mpesaReceiptCode.matches('^[A-Z0-9]+$') &&
+             data.status is string && (data.status == 'active' || data.status == 'cancelled') &&
+             data.createdAt is timestamp && data.createdAt <= request.time &&
+             data.updatedAt is timestamp && data.updatedAt <= request.time;
+    }
+
+    match /users/{userId}/tasks/{taskId} {
+      allow get: if isSignedIn() &&
+                    isValidId(userId) &&
+                    isValidId(taskId) &&
+                    request.auth.uid == userId &&
+                    existing().userId == request.auth.uid;
+
+      allow list: if isSignedIn() &&
+                     request.auth.uid == userId &&
+                     existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(taskId) &&
+                       request.auth.uid == userId &&
+                       incoming().keys().hasAll(['userId', 'title', 'blockerType', 'dreadLevel', 'microSteps', 'completedStepsCount', 'status', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'title', 'blockerType', 'dreadLevel', 'microSteps', 'completedStepsCount', 'status', 'createdAt', 'updatedAt']) &&
+                       incoming().status == 'active' &&
+                       isValidTask(incoming(), userId);
+
+      allow update: if isValidTask(incoming(), userId) &&
+                       isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(taskId) &&
+                       request.auth.uid == userId &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       existing().status != 'completed' &&
+                       (
+                         incoming().diff(existing()).affectedKeys().hasOnly(['completedStepsCount', 'microSteps', 'status', 'updatedAt']) ||
+                         incoming().diff(existing()).affectedKeys().hasOnly(['title', 'blockerType', 'dreadLevel', 'microSteps', 'updatedAt'])
+                       );
+
+      allow delete: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(taskId) &&
+                       request.auth.uid == userId &&
+                       existing().userId == request.auth.uid;
+    }
+
+    match /users/{userId}/thought_logs/{logId} {
+      allow get: if isSignedIn() &&
+                    isValidId(userId) &&
+                    isValidId(logId) &&
+                    request.auth.uid == userId &&
+                    existing().userId == request.auth.uid;
+
+      allow list: if isSignedIn() &&
+                     request.auth.uid == userId &&
+                     existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(logId) &&
+                       request.auth.uid == userId &&
+                       incoming().keys().hasAll(['userId', 'anxiousThought', 'distortion', 'reframeText', 'tinyAction', 'anxietyBefore', 'anxietyAfter', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'anxiousThought', 'distortion', 'reframeText', 'tinyAction', 'anxietyBefore', 'anxietyAfter', 'createdAt', 'updatedAt']) &&
+                       isValidThoughtLog(incoming(), userId);
+
+      allow update: if isValidThoughtLog(incoming(), userId) &&
+                       isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(logId) &&
+                       request.auth.uid == userId &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['reframeText', 'tinyAction', 'anxietyAfter', 'updatedAt']);
+
+      allow delete: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(logId) &&
+                       request.auth.uid == userId &&
+                       existing().userId == request.auth.uid;
+    }
+
+    match /users/{userId}/focus_sessions/{sessionId} {
+      allow get: if isSignedIn() &&
+                    isValidId(userId) &&
+                    isValidId(sessionId) &&
+                    request.auth.uid == userId &&
+                    existing().userId == request.auth.uid;
+
+      allow list: if isSignedIn() &&
+                     request.auth.uid == userId &&
+                     existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(sessionId) &&
+                       request.auth.uid == userId &&
+                       incoming().keys().hasAll(['userId', 'modeName', 'durationMinutes', 'taskTitle', 'reliefRating', 'createdAt']) &&
+                       incoming().keys().hasOnly(['userId', 'modeName', 'durationMinutes', 'taskTitle', 'reliefRating', 'createdAt']) &&
+                       isValidFocusSession(incoming(), userId);
+
+      allow update: if false;
+
+      allow delete: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(sessionId) &&
+                       request.auth.uid == userId &&
+                       existing().userId == request.auth.uid;
+    }
+
+    match /users/{userId}/worry_vault/{worryId} {
+      allow get: if isSignedIn() &&
+                    isValidId(userId) &&
+                    isValidId(worryId) &&
+                    request.auth.uid == userId &&
+                    existing().userId == request.auth.uid;
+
+      allow list: if isSignedIn() &&
+                     request.auth.uid == userId &&
+                     existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(worryId) &&
+                       request.auth.uid == userId &&
+                       incoming().keys().hasAll(['userId', 'worryText', 'scheduledWindow', 'isResolved', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'worryText', 'scheduledWindow', 'isResolved', 'createdAt', 'updatedAt']) &&
+                       incoming().isResolved == false &&
+                       isValidWorryVaultItem(incoming(), userId);
+
+      allow update: if isValidWorryVaultItem(incoming(), userId) &&
+                       isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(worryId) &&
+                       request.auth.uid == userId &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['isResolved', 'updatedAt']);
+
+      allow delete: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(worryId) &&
+                       request.auth.uid == userId &&
+                       existing().userId == request.auth.uid;
+    }
+
+    match /users/{userId}/subscriptions/{subscriptionId} {
+      allow get: if isSignedIn() &&
+                    isValidId(userId) &&
+                    isValidId(subscriptionId) &&
+                    request.auth.uid == userId &&
+                    existing().userId == request.auth.uid;
+
+      allow list: if isSignedIn() &&
+                     request.auth.uid == userId &&
+                     existing().userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(subscriptionId) &&
+                       request.auth.uid == userId &&
+                       incoming().keys().hasAll(['userId', 'planId', 'planTitle', 'amountKes', 'recipientMpesaNumber', 'senderPhone', 'mpesaReceiptCode', 'status', 'createdAt', 'updatedAt']) &&
+                       incoming().keys().hasOnly(['userId', 'planId', 'planTitle', 'amountKes', 'recipientMpesaNumber', 'senderPhone', 'mpesaReceiptCode', 'status', 'createdAt', 'updatedAt']) &&
+                       incoming().status == 'active' &&
+                       isValidMpesaSubscription(incoming(), userId);
+
+      allow update: if isValidMpesaSubscription(incoming(), userId) &&
+                       isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(subscriptionId) &&
+                       request.auth.uid == userId &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+
+      allow delete: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(subscriptionId) &&
+                       request.auth.uid == userId &&
+                       existing().userId == request.auth.uid;
+    }
+  }
+}

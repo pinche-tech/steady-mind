@@ -1,0 +1,6 @@
+{
+  "name": "SteadyMind",
+  "description": "An action-oriented companion for overcoming task paralysis, breaking down overwhelming goals into micro-steps, and calming anxiety through guided breathing, grounding, and cognitive reframing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

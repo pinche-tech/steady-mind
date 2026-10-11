@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">SteadyMind</string>
+    <string name="cd_hero_banner">Serene sunrise hills illustration</string>
+    <string name="cd_empty_tasks">Balanced river stones illustration</string>
+
+    <string name="nav_unstick">Tasks</string>
+    <string name="nav_coach">AI Coach</string>
+    <string name="nav_focus">Focus</string>
+    <string name="nav_calm">Calm</string>
+    <string name="nav_reframe">Reframe</string>
+
+    <string name="upcoming_tasks_title">Upcoming Tasks</string>
+    <string name="upcoming_tasks_placeholder_subtitle">Your upcoming tasks and gentle 2-minute micro-steps will appear right here. Start with just one small thing or ask SteadyMind AI to break it down for you.</string>
+    <string name="add_task_fab">Add Task</string>
+    <string name="new_reframe_fab">Reframe a Worry</string>
+</resources>
